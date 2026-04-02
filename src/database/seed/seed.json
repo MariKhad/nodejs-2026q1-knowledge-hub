@@ -1,0 +1,49 @@
+{
+  "users": [
+    {
+      "id": "ba24f80a-f68f-47a1-90ad-bb9a0aa71615",
+      "login": "john_doe",
+      "password": "$2b$10$9tRjXjXjXjXjXjXjXjXjXeO0qL0qL0qL0qL0qL0qL0qL0qL0qL",
+      "role": "editor",
+      "createdAt": 1733155200000,
+      "updatedAt": 1733155200000
+    },
+    {
+      "id": "b3b83ccf-3b3a-4efd-96db-84092b4703e7",
+      "login": "jane_smith",
+      "password": "$2b$10$9tRjXjXjXjXjXjXjXjXjXeO0qL0qL0qL0qL0qL0qL0qL0qL0qL",
+      "role": "viewer",
+      "createdAt": 1733155200000,
+      "updatedAt": 1733155200000
+    }
+  ],
+  "categories": [
+    {
+      "id": "050c0dc5-c750-496b-94b8-e8a38bab35cb",
+      "name": "High Tech",
+      "description": "Articles about technology and innovation"
+    }
+  ],
+  "articles": [
+    {
+      "id": "bbd1d00a-8bd5-43ad-805a-329b15a14ec5",
+      "title": "The Future of AI",
+      "content": "Artificial intelligence is transforming the world as we know it. From healthcare to transportation, AI is everywhere.",
+      "status": "published",
+      "authorId": "ba24f80a-f68f-47a1-90ad-bb9a0aa71615",
+      "categoryId": "050c0dc5-c750-496b-94b8-e8a38bab35cb",
+      "tags": ["ai", "technology", "future"],
+      "createdAt": 1733155200000,
+      "updatedAt": 1733155200000
+    }
+  ],
+  "comments": [
+    {
+      "id": "ff4f2b8a-d66a-4665-8dc0-4b5dedb799ee",
+      "content": "Great article! Very insightful.",
+      "articleId": "bbd1d00a-8bd5-43ad-805a-329b15a14ec5",
+      "authorId": "b3b83ccf-3b3a-4efd-96db-84092b4703e7",
+      "createdAt": 1733155200000
+    }
+  ]
+}

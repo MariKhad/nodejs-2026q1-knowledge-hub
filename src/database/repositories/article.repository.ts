@@ -1,23 +1,21 @@
 import { IArticle } from "src/article/interfaces/IArticle";
 import { Database } from "../db.interface";
+import { DATABASE_CONNECTION } from "../db.provider";
+import { Inject } from "@nestjs/common";
 
 export class ArticleRepository {
-  private data: Database;
-
-  constructor(data: Database) {
-    this.data = data;
-  }
+constructor(@Inject(DATABASE_CONNECTION) private db: Database) {}
 
   findAll(): IArticle[] {
-    return this.data.articles;
+    return this.db.articles;
   }
 
   findById(id: string): IArticle | undefined {
-    return this.data.articles.find(article => article.id === id);
+    return this.db.articles.find(article => article.id === id);
   }
 
   findByFilters(filters: { status?: string; categoryId?: string; tag?: string }): IArticle[] {
-    let filtered = [...this.data.articles];
+    let filtered = [...this.db.articles];
     
     if (filters.status) {
       filtered = filtered.filter(a => a.status === filters.status);
@@ -33,25 +31,25 @@ export class ArticleRepository {
   }
 
   create(article: IArticle): void {
-    this.data.articles.push(article);
+    this.db.articles.push(article);
   }
 
   update(id: string, updatedArticle: IArticle): boolean {
-    const index = this.data.articles.findIndex(article => article.id === id);
+    const index = this.db.articles.findIndex(article => article.id === id);
     if (index === -1) return false;
-    this.data.articles[index] = updatedArticle;
+    this.db.articles[index] = updatedArticle;
     return true;
   }
 
   delete(id: string): boolean {
-    const initialLength = this.data.articles.length;
-    this.data.articles = this.data.articles.filter(article => article.id !== id);
-    return this.data.articles.length !== initialLength;
+    const initialLength = this.db.articles.length;
+    this.db.articles = this.db.articles.filter(article => article.id !== id);
+    return this.db.articles.length !== initialLength;
   }
 
   nullifyCategoryId(categoryId: string): number {
     let updatedCount = 0;
-    this.data.articles = this.data.articles.map(article => {
+    this.db.articles = this.db.articles.map(article => {
       if (article.categoryId === categoryId) {
         updatedCount++;
         return { ...article, categoryId: null };
@@ -63,7 +61,7 @@ export class ArticleRepository {
 
     nullifyAuthorId(authorId: string): number {
     let updatedCount = 0;
-    this.data.articles = this.data.articles.map(article => {
+    this.db.articles = this.db.articles.map(article => {
       if (article.authorId === authorId) {
         updatedCount++;
         return { ...article, authorId: null };
@@ -74,6 +72,6 @@ export class ArticleRepository {
   }
 
   getCommentsByArticleId(articleId: string) {
-    return this.data.comments.filter(comment => comment.articleId === articleId);
+    return this.db.comments.filter(comment => comment.articleId === articleId);
   }
 }

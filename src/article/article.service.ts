@@ -1,23 +1,27 @@
-// article/article.service.ts
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject, forwardRef } from '@nestjs/common';
 import { ArticleRepository } from '../database/repositories/article.repository';
-import { UserRepository } from '../database/repositories/users.repository';
-import { CategoryRepository } from '../database/repositories/category.repository';
 import { IArticle } from './interfaces/IArticle';
 import { EArticleStatus } from './enums/EArticleStatus';
 import { randomUUID } from 'crypto';
 import { CreateArticleDto } from './dto/CreateArticleDto';
 import { UpdateArticleDto } from './dto/UpdateArticleDto';
+import { CommentService } from '../comment/comment.service';
+import { CategoryService } from '../category/category.service';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class ArticleService {
   constructor(
     private articleRepository: ArticleRepository,
-    private userRepository: UserRepository,
-    private categoryRepository: CategoryRepository,
+    @Inject(forwardRef(() => UserService))
+    private userService: UserService,
+    @Inject(forwardRef(() => CategoryService))
+    private categoryService: CategoryService,
+    @Inject(forwardRef(() => CommentService))
+    private commentService: CommentService,
   ) {}
 
-  findAll(status?: string, categoryId?: string, tag?: string): IArticle[] {
+  findAll(status?: EArticleStatus, categoryId?: string, tag?: string): IArticle[] {
     return this.articleRepository.findByFilters({ status, categoryId, tag });
   }
 
@@ -33,14 +37,14 @@ export class ArticleService {
     const { title, content, status = EArticleStatus.DRAFT, authorId, categoryId, tags = [] } = createArticleDto;
 
     if (authorId) {
-      const author = this.userRepository.findById(authorId);
+      const author = this.userService.findById(authorId);
       if (!author) {
         throw new BadRequestException(`User with id ${authorId} not found`);
       }
     }
 
     if (categoryId) {
-      const category = this.categoryRepository.findById(categoryId);
+      const category = this.categoryService.findById(categoryId);
       if (!category) {
         throw new BadRequestException(`Category with id ${categoryId} not found`);
       }
@@ -70,14 +74,14 @@ export class ArticleService {
     }
 
     if (updateArticleDto.authorId) {
-      const author = this.userRepository.findById(updateArticleDto.authorId);
+      const author = this.userService.findById(updateArticleDto.authorId);
       if (!author) {
         throw new BadRequestException(`User with id ${updateArticleDto.authorId} not found`);
       }
     }
 
     if (updateArticleDto.categoryId) {
-      const category = this.categoryRepository.findById(updateArticleDto.categoryId);
+      const category = this.categoryService.findById(updateArticleDto.categoryId);
       if (!category) {
         throw new BadRequestException(`Category with id ${updateArticleDto.categoryId} not found`);
       }
@@ -94,7 +98,15 @@ export class ArticleService {
   }
 
   delete(id: string): void {
+    const article = this.articleRepository.findById(id);
+    if (!article) {
+      throw new NotFoundException(`Article with id ${id} not found`);
+    }
+    
+    this.commentService.deleteByArticleId(id);
     const deleted = this.articleRepository.delete(id);
+
+
     if (!deleted) {
       throw new NotFoundException(`Article with id ${id} not found`);
     }
@@ -104,7 +116,9 @@ export class ArticleService {
     this.articleRepository.nullifyAuthorId(authorId);
   }
 
-  nullifyCategoryId(categoryId: string): void {
-    this.articleRepository.nullifyCategoryId(categoryId);
+  nullifyCategoryId(categoryId: string): number {
+    const result = this.articleRepository.nullifyCategoryId(categoryId);
+    return result;
   }
+  
 }

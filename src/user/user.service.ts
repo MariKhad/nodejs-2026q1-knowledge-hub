@@ -1,39 +1,45 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
-import { randomUUID } from 'crypto';
-import * as bcrypt from 'bcrypt';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException, forwardRef, Inject } from '@nestjs/common';
 import { CreateUserDto } from './dto/CreateUserDto';
 import { UpdatePasswordDto } from './dto/UpdatePasswordDto';
-import { User } from './interfaces/IUser';
+import { IUser } from './interfaces/IUser';
 import { EUserRole } from './enums/EUserRole';
-import { db } from '../database/db.interface';
+import * as bcrypt from 'bcrypt';
+import { randomUUID } from 'crypto';
+import { UserRepository } from '../database/repositories/users.repository';
+import { CommentService } from '../comment/comment.service';
+import { ArticleService } from '../article/article.service';
 
 @Injectable()
 export class UserService {
-  private excludePassword(user: User): Omit<User, 'password'> {
+  constructor(    
+    private userRepository: UserRepository,
+    @Inject(forwardRef(() => CommentService))
+    private commentService: CommentService,  
+    @Inject(forwardRef(() => ArticleService))
+    private articleService: ArticleService
+  ) {}
+
+  private excludePassword(user: IUser): Omit<IUser, 'password'> {
     const { password, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
 
-  findAll(): Omit<User, 'password'>[] {
-    return db.users.map(user => this.excludePassword(user));
+  findAll(): Omit<IUser, 'password'>[] {
+    return this.userRepository.findAll().map(user => this.excludePassword(user));
   }
 
-  findById(id: string): Omit<User, 'password'> {
-    const user = db.users.find(u => u.id === id);
+  findById(id: string): Omit<IUser, 'password'> {
+    const user = this.userRepository.findById(id);
     if (!user) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
     return this.excludePassword(user);
   }
 
-  findByIdWithPassword(id: string): User | undefined {
-    return db.users.find(u => u.id === id);
-  }
-
-  async create(createUserDto: CreateUserDto): Promise<Omit<User, 'password'>> {
+  async create(createUserDto: CreateUserDto): Promise<Omit<IUser, 'password'>> {
     const { login, password, role = EUserRole.VIEWER } = createUserDto;
 
-    const existingUser = db.users.find(u => u.login === login);
+    const existingUser = this.userRepository.findByLogin(login);
     if (existingUser) {
       throw new BadRequestException(`User with login "${login}" already exists`);
     }
@@ -41,7 +47,7 @@ export class UserService {
     const hashedPassword = await bcrypt.hash(password, 10);
     const now = Date.now();
 
-    const newUser: User = {
+    const newUser: IUser = {
       id: randomUUID(),
       login,
       password: hashedPassword,
@@ -50,14 +56,14 @@ export class UserService {
       updatedAt: now,
     };
 
-    db.users.push(newUser);
+    this.userRepository.create(newUser);
     return this.excludePassword(newUser);
   }
 
-  async updatePassword(id: string, updatePasswordDto: UpdatePasswordDto): Promise<Omit<User, 'password'>> {
+  async updatePassword(id: string, updatePasswordDto: UpdatePasswordDto): Promise<Omit<IUser, 'password'>> {
     const { oldPassword, newPassword } = updatePasswordDto;
 
-    const user = db.users.find(u => u.id === id);
+    const user = this.userRepository.findById(id);
     if (!user) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
@@ -71,18 +77,22 @@ export class UserService {
     user.password = hashedNewPassword;
     user.updatedAt = Date.now();
 
+    this.userRepository.update(id, user);
     return this.excludePassword(user);
   }
 
   delete(id: string): void {
-    const userIndex = db.users.findIndex(u => u.id === id);
-    if (userIndex === -1) {
+    const user = this.userRepository.findById(id);
+    if (!user) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
-    db.users.splice(userIndex, 1);
-  }
 
-  getUserEntity(id: string): User | undefined {
-    return db.users.find(u => u.id === id);
+    this.articleService.nullifyAuthorId(id);
+    this.commentService.deleteByAuthorId(id); 
+
+    const deleted = this.userRepository.delete(id);
+    if (!deleted) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
   }
 }

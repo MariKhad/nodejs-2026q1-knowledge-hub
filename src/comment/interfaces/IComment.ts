@@ -1,4 +1,4 @@
-export class ICategory {
+export class IComment {
   id: string;
   content: string;
   articleId: string;
