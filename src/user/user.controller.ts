@@ -3,7 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/s
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/CreateUserDto';
 import { UpdatePasswordDto } from './dto/UpdatePasswordDto';
-import { validate as isUUID } from 'uuid';
+import { UuidValidationPipe } from 'src/common/pipes/uuid.pipe';
 
 @ApiTags('Users')
 @Controller('user')
@@ -23,8 +23,7 @@ export class UserController {
   @ApiResponse({ status: 200, description: 'Returns user' })
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
   @ApiResponse({ status: 404, description: 'User not found' })
-  findOne(@Param('id') id: string) {
-    this.validateUuid(id);
+  findOne(@Param('id', UuidValidationPipe) id: string) {
     return this.userService.findById(id);
   }
 
@@ -47,10 +46,9 @@ export class UserController {
   @ApiResponse({ status: 404, description: 'User not found' })
   @ApiBody({ type: UpdatePasswordDto })
   async updatePassword(
-    @Param('id') id: string,
+    @Param('id', UuidValidationPipe) id: string,
     @Body() updatePasswordDto: UpdatePasswordDto,
   ) {
-    this.validateUuid(id);
     return this.userService.updatePassword(id, updatePasswordDto);
   }
 
@@ -61,14 +59,7 @@ export class UserController {
   @ApiResponse({ status: 204, description: 'User deleted successfully' })
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
   @ApiResponse({ status: 404, description: 'User not found' })
-  remove(@Param('id') id: string) {
-    this.validateUuid(id);
+  remove(@Param('id', UuidValidationPipe) id: string) {
     this.userService.delete(id);
-  }
-
-  private validateUuid(id: string): void {
-    if (!isUUID(id)) {
-      throw new BadRequestException(`Invalid UUID: ${id}`);
-    }
   }
 }

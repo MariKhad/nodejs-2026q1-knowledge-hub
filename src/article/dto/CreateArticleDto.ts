@@ -37,7 +37,7 @@ export class CreateArticleDto {
   })
   @IsOptional()
   @IsUUID()
-  authorId?: string;
+  authorId?: string | null;
 
   @ApiPropertyOptional({
     example: '123e4567-e89b-12d3-a456-426614174001',
@@ -45,7 +45,7 @@ export class CreateArticleDto {
   })
   @IsOptional()
   @IsUUID()
-  categoryId?: string;
+  categoryId?: string | null;
 
   @ApiPropertyOptional({
     example: ['nestjs', 'typescript', 'api'],
