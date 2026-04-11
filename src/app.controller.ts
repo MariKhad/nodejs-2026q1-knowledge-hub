@@ -6,7 +6,7 @@ import { AppService } from './app.service';
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
-  @Get()
+  @Get('health')
   @ApiOperation({ summary: 'Health check' })
   @ApiResponse({ status: 200, description: 'API is running' })
   getHealth(): { status: string; timestamp: number } {
