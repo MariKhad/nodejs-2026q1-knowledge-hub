@@ -39,4 +39,4 @@ lerna-debug.log*
 prisma/*.db
 prisma/*.db-journal
 
-/generated/prisma
+/generated/client
