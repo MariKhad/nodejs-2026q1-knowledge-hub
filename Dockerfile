@@ -9,6 +9,9 @@ RUN npm run build
 # ========== PRODUCTION ==========
 FROM node:24-alpine
 WORKDIR /app
+
+RUN apk add --no-cache curl
+
 ENV NODE_ENV=production
 COPY --from=builder /app/dist ./dist
 COPY package*.json ./
