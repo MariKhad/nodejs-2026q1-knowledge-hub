@@ -25,8 +25,8 @@ model User {
   login     String   @unique
   password  String
   role      Role     @default(VIEWER)
-  createdAt Int      @map("created_at")
-  updatedAt Int      @map("updated_at")
+  createdAt DateTime      @map("created_at")
+  updatedAt DateTime    @map("updated_at")
 
   articles Article[]
   comments Comment[]
@@ -66,13 +66,13 @@ model Article {
   status     ArticleStatus @default(DRAFT)
   authorId   String?       @map("author_id")
   categoryId String?       @map("category_id")
-  createdAt  Int           @map("created_at")
-  updatedAt  Int           @map("updated_at")
+  createdAt  DateTime      @map("created_at")
+  updatedAt  DateTime      @map("updated_at")
 
   author   User?      @relation(fields: [authorId], references: [id], onDelete: SetNull)
   category Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   comments Comment[]
-  tags     Tag[]      @relation("ArticleToTag")
+  tags     Tag[]
 
   @@index([status])
   @@index([categoryId])
