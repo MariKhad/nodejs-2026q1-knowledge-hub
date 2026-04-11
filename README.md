@@ -15,6 +15,16 @@ The application is available as a Docker image on Docker Hub:
 docker pull bzzzuka/knowledge-hub-api:latest
 ```
 
+## Запуск Adminer
+
+Adminer — это легковесный инструмент для управления базами данных через веб-интерфейс.
+
+### Через Docker
+
+```bash
+docker run -d -p 8080:8080 --name adminer adminer
+```
+
 ## Downloading
 
 ```
