@@ -10,7 +10,7 @@ CREATE TABLE "users" (
     "login" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "role" "Role" NOT NULL DEFAULT 'VIEWER',
-    "created_at" TIMESTAMP(3) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
@@ -45,7 +45,7 @@ CREATE TABLE "articles" (
     "status" "ArticleStatus" NOT NULL DEFAULT 'DRAFT',
     "author_id" TEXT,
     "category_id" TEXT,
-    "created_at" TIMESTAMP(3) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "articles_pkey" PRIMARY KEY ("id")
@@ -57,7 +57,8 @@ CREATE TABLE "comments" (
     "content" TEXT NOT NULL,
     "article_id" TEXT NOT NULL,
     "author_id" TEXT,
-    "created_at" INTEGER NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "comments_pkey" PRIMARY KEY ("id")
 );
