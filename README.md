@@ -1,4 +1,4 @@
-# Knowledge Hub
+# Knowledge Hub API
 
 ## Prerequisites
 
@@ -24,8 +24,17 @@ npm start
 ```
 
 After starting the app on port (4000 as default) you can open
-in your browser OpenAPI documentation by typing http://localhost:4000/doc/.
 For more information about OpenAPI/Swagger please visit https://swagger.io/.
+
+
+## API Documentation
+http://localhost:4000/doc
+
+## Endpoints
+- GET /user, POST /user, PUT /user/:id, DELETE /user/:id
+- GET /article, POST /article, PUT /article/:id, DELETE /article/:id
+- GET /category, POST /category, PUT /category/:id, DELETE /category/:id
+- GET /comment?articleId=, POST /comment, DELETE /comment/:id
 
 ## Testing
 
