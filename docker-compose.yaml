@@ -1,5 +1,3 @@
-version: '3.8'
-
 networks:
   knowledge-network:
     driver: bridge
@@ -33,6 +31,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: bzzzuka/knowledge-hub-api:latest  
     container_name: knowledge-hub-api
     restart: on-failure
     ports:
@@ -57,7 +56,7 @@ services:
       retries: 3
       start_period: 40s
   adminer:
-    image: adminer
+    image: adminer:latest
     container_name: knowledge-hub-adminer
     restart: unless-stopped
     ports:
