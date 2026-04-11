@@ -5,6 +5,26 @@
 - Git - [Download & Install Git](https://git-scm.com/downloads).
 - Node.js - [Download & Install Node.js](https://nodejs.org/en/download/) and the npm package manager.
 
+## Docker Image
+
+The application is available as a Docker image on Docker Hub:
+
+**Image:** `bzzzuka/knowledge-hub-api:latest`
+
+```bash
+docker pull bzzzuka/knowledge-hub-api:latest
+```
+
+## Запуск Adminer
+
+Adminer — это легковесный инструмент для управления базами данных через веб-интерфейс.
+
+### Через Docker
+
+```bash
+docker run -d -p 8080:8080 --name adminer adminer
+```
+
 ## Downloading
 
 ```
@@ -91,3 +111,5 @@ npm run format
 Press <kbd>F5</kbd> to debug.
 
 For more information, visit: https://code.visualstudio.com/docs/editor/debugging
+
+
