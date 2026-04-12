@@ -1,6 +1,6 @@
 import { IsString, IsOptional, IsEnum, MinLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Role } from '../../../prisma/generated/client';
+import { Role } from '../../../src/generated/prisma';
 
 export class CreateUserDto {
   @ApiProperty({ example: 'john_doe', description: 'Unique username', minLength: 3 })

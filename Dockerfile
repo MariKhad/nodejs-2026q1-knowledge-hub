@@ -1,36 +1,34 @@
-# ========== BUILD ==========
-FROM node:24-alpine AS builder
+FROM node:24-alpine AS build
+
 WORKDIR /app
 
 ARG DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy?schema=public"
 ENV DATABASE_URL=$DATABASE_URL
 
 COPY package*.json ./
-COPY prisma ./prisma/
 RUN npm ci
+
 COPY . .
 RUN npx prisma generate
 RUN npm run build
-RUN npm prune --production
 
-# ========== PRODUCTION ==========
-FROM node:24-alpine AS runner
+COPY --chown=node:node src/generated ./dist/src/generated
+
+
+FROM node:24-alpine AS production
+
 WORKDIR /app
-RUN apk add --no-cache curl openssl
 
 ENV NODE_ENV=production
 
-COPY --chown=node:node --from=builder /app/package*.json ./
-COPY --chown=node:node --from=builder /app/dist ./dist
-COPY --chown=node:node --from=builder /app/node_modules ./node_modules
-COPY --chown=node:node --from=builder /app/prisma ./prisma
-COPY --chown=node:node --from=builder /app/prisma.config.ts ./
+COPY package*.json ./
+RUN npm ci --omit=dev
 
-
-COPY --from=builder /app/prisma/migrations ./prisma/migrations
+COPY --chown=node:node --from=build /app/dist ./dist
+COPY --chown=node:node --from=build /app/doc ./doc
 
 USER node
 
 EXPOSE 4000
 
-CMD npx prisma migrate deploy && node dist/src/main
+CMD ["node", "dist/src/main.js"]

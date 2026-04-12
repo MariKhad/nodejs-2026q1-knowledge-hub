@@ -1,6 +1,6 @@
 
 import * as bcrypt from 'bcrypt';
-import { ArticleStatus, PrismaClient, Role } from 'prisma/generated/client'
+import { ArticleStatus, PrismaClient, Role } from '../src/generated/prisma'
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 

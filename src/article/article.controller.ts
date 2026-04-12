@@ -4,7 +4,7 @@ import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/CreateArticleDto';
 import { UpdateArticleDto } from './dto/UpdateArticleDto';
 import { UuidValidationPipe } from '../common/pipes/uuid.pipe';
-import { ArticleStatus } from 'prisma/generated/client';
+import { ArticleStatus } from '../../src/generated/prisma';
 
 @ApiTags('Articles')
 @Controller('article')
@@ -17,7 +17,7 @@ export class ArticleController {
   @ApiQuery({ name: 'status', required: false, enum: ArticleStatus })
   @ApiQuery({ name: 'categoryId', required: false, type: String })
   @ApiQuery({ name: 'tag', required: false, type: String })
-  findAll(
+  async findAll(
     @Query('status') status?: ArticleStatus,
     @Query('categoryId') categoryId?: string,
     @Query('tag') tag?: string,
@@ -31,8 +31,8 @@ export class ArticleController {
   @ApiResponse({ status: 200, description: 'Returns article' })
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
   @ApiResponse({ status: 404, description: 'Article not found' })
-  findOne(@Param('id', UuidValidationPipe) id: string) {
-    return this.articleService.findById(id);
+  async findOne(@Param('id', UuidValidationPipe) id: string) {
+    await this.articleService.findById(id);
   }
 
   @Post()
@@ -41,8 +41,8 @@ export class ArticleController {
   @ApiResponse({ status: 201, description: 'Article created successfully' })
   @ApiResponse({ status: 400, description: 'Invalid input or author/category not found' })
   @ApiBody({ type: CreateArticleDto })
-  create(@Body() createArticleDto: CreateArticleDto) {
-    return this.articleService.create(createArticleDto);
+  async create(@Body() createArticleDto: CreateArticleDto) {
+    return await this.articleService.create(createArticleDto);
   }
 
   @Put(':id')
@@ -52,11 +52,11 @@ export class ArticleController {
   @ApiResponse({ status: 400, description: 'Invalid UUID or input' })
   @ApiResponse({ status: 404, description: 'Article not found' })
   @ApiBody({ type: UpdateArticleDto })
-  update(
+  async update(
     @Param('id', UuidValidationPipe) id: string,
     @Body() updateArticleDto: UpdateArticleDto,
   ) {
-    return this.articleService.update(id, updateArticleDto);
+    return await this.articleService.update(id, updateArticleDto);
   }
 
   @Delete(':id')

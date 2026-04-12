@@ -3,7 +3,7 @@ import { randomUUID } from 'crypto';
 import { CreateArticleDto } from './dto/CreateArticleDto';
 import { UpdateArticleDto } from './dto/UpdateArticleDto';
 import { PrismaService } from '../prisma/prisma.service';
-import { Article, ArticleStatus } from 'prisma/generated/client';
+import { Article, ArticleStatus } from '../../src/generated/prisma';
 
 @Injectable()
 export class ArticleService {
@@ -32,7 +32,7 @@ async findAll(
     };
   }
 
-  return await this.prismaService.article.findMany({
+  return this.prismaService.article.findMany({
     where,
     include: {
       author: true,

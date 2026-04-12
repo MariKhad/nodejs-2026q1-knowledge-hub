@@ -3,7 +3,7 @@ import { CreateCommentDto } from './dto/CreateCommentDto';
 import { randomUUID } from 'crypto';
 import { validate as isUUID } from 'uuid';
 import { PrismaService } from '../prisma/prisma.service';
-import { Comment } from '../../prisma/generated/client';
+import { Comment } from '../../src/generated/prisma';
 
 
 @Injectable()

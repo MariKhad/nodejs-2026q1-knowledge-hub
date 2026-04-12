@@ -3,8 +3,8 @@ import { CreateUserDto } from './dto/CreateUserDto';
 import { UpdatePasswordDto } from './dto/UpdatePasswordDto';
 import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { Role, User } from 'prisma/generated/client';
+import { PrismaService } from '../prisma/prisma.service';
+import { Role, User } from '../../src/generated/prisma';
 
 @Injectable()
 export class UserService {

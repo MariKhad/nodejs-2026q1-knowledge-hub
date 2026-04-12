@@ -3,7 +3,7 @@ import { CreateCategoryDto } from './dto/CreateCategoryDto';
 import { UpdateCategoryDto } from './dto/UpdateCategoryDto';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
-import { Category } from '../../prisma/generated/client';
+import { Category } from '../../src/generated/prisma';
 
 
 @Injectable()
@@ -11,7 +11,7 @@ export class CategoryService {
   constructor(private prismaService: PrismaService) {}
 
 async findAll(): Promise<Category[]> {
-    return this.prismaService.category.findMany();
+    return await this.prismaService.category.findMany();
   }
 
 async findById(id: string): Promise<Category> {
