@@ -4,7 +4,7 @@ import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/CreateArticleDto';
 import { UpdateArticleDto } from './dto/UpdateArticleDto';
 import { UuidValidationPipe } from '../common/pipes/uuid.pipe';
-import { EArticleStatus } from './enums/EArticleStatus';
+import { ArticleStatus } from 'prisma/generated/client';
 
 @ApiTags('Articles')
 @Controller('article')
@@ -14,11 +14,11 @@ export class ArticleController {
   @Get()
   @ApiOperation({ summary: 'Get all articles' })
   @ApiResponse({ status: 200, description: 'Returns all articles' })
-  @ApiQuery({ name: 'status', required: false, enum: EArticleStatus })
+  @ApiQuery({ name: 'status', required: false, enum: ArticleStatus })
   @ApiQuery({ name: 'categoryId', required: false, type: String })
   @ApiQuery({ name: 'tag', required: false, type: String })
   findAll(
-    @Query('status') status?: EArticleStatus,
+    @Query('status') status?: ArticleStatus,
     @Query('categoryId') categoryId?: string,
     @Query('tag') tag?: string,
   ) {

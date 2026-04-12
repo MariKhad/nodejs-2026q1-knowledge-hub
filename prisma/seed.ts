@@ -1,9 +1,37 @@
-import { PrismaClient, Role, ArticleStatus } from './generated/client';
-import * as bcrypt from 'bcrypt';
 
-const prisma = new PrismaClient();
+import * as bcrypt from 'bcrypt';
+import { ArticleStatus, PrismaClient, Role } from 'prisma/generated/client'
+import { Pool } from "pg";
+import { PrismaPg } from "@prisma/adapter-pg";
+
+const connectionString = `${process.env.DATABASE_URL}`;
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
+
+async function isDatabaseEmpty() {
+  try {
+    const userCount = await prisma.user.count();
+    const articleCount = await prisma.article.count();
+    const categoryCount = await prisma.category.count();
+    return userCount === 0 && articleCount === 0 && categoryCount === 0;
+  } catch (error) {
+    if (error.code === 'P2021') {
+      console.log('Tables not found, database needs seeding');
+      return true;
+    }
+    throw error;
+  }
+}
 
 async function main() {
+   const isEmpty = await isDatabaseEmpty();
+  
+  if (!isEmpty) {
+    console.log('\nDatabase already has data. Skipping seed.');
+    return;
+  }
+
   console.log('Seed starts...');
 
   const hashedPassword = await bcrypt.hash('Password123', 10);
@@ -212,10 +240,13 @@ async function main() {
 }
 
 main()
-  .catch((e) => {
-    console.error('Seed failed:', e);
-    process.exit(1);
-  })
-  .finally(async () => {
+  .then(async () => {
     await prisma.$disconnect();
+    await pool.end();
+  })
+  .catch(async (e) => {
+    console.error(e);
+    await prisma.$disconnect();
+    await pool.end();
+    process.exit(1);
   });

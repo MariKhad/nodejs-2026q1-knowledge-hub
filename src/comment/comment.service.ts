@@ -2,8 +2,8 @@ import { Injectable, NotFoundException, BadRequestException, UnprocessableEntity
 import { CreateCommentDto } from './dto/CreateCommentDto';
 import { randomUUID } from 'crypto';
 import { validate as isUUID } from 'uuid';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { Comment } from 'prisma/generated/client';
+import { PrismaService } from '../prisma/prisma.service';
+import { Comment } from '../../prisma/generated/client';
 
 
 @Injectable()

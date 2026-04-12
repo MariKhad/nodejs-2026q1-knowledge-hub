@@ -1,10 +1,8 @@
 import { Injectable, NotFoundException, BadRequestException, Inject, forwardRef } from '@nestjs/common';
-import { IArticle } from './interfaces/IArticle';
-import { EArticleStatus } from './enums/EArticleStatus';
 import { randomUUID } from 'crypto';
 import { CreateArticleDto } from './dto/CreateArticleDto';
 import { UpdateArticleDto } from './dto/UpdateArticleDto';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { Article, ArticleStatus } from 'prisma/generated/client';
 
 @Injectable()
@@ -34,7 +32,7 @@ async findAll(
     };
   }
 
-  return this.prismaService.article.findMany({
+  return await this.prismaService.article.findMany({
     where,
     include: {
       author: true,
@@ -82,39 +80,56 @@ async findById(id: string): Promise<Article> {
   return article;
 }
 
-async create(createArticleDto: CreateArticleDto): Promise<IArticle> {
-    const { title, content, status = EArticleStatus.DRAFT, authorId, categoryId, tags = [] } = createArticleDto;
-
-    if (authorId) {
-      const author = this.userService.findById(authorId);
-      if (!author) {
-        throw new BadRequestException(`User with id ${authorId} not found`);
-      }
+async create(createArticleDto: CreateArticleDto): Promise<Article> {
+  const { title, content, status = ArticleStatus.DRAFT, authorId, categoryId, tags = [] } = createArticleDto;
+  if (authorId) {
+    const author = await this.prismaService.user.findUnique({
+      where: { id: authorId },
+    });
+    if (!author) {
+      throw new BadRequestException(`User with id ${authorId} not found`);
     }
+  }
 
-    if (categoryId) {
-      const category = this.categoryService.findById(categoryId);
-      if (!category) {
-        throw new BadRequestException(`Category with id ${categoryId} not found`);
-      }
+  if (categoryId) {
+    const category = await this.prismaService.category.findUnique({
+      where: { id: categoryId },
+    });
+    if (!category) {
+      throw new BadRequestException(`Category with id ${categoryId} not found`);
     }
+  }
 
-    const now = Date.now();
-    const newArticle: IArticle = {
+  const newArticle = await this.prismaService.article.create({
+    data: {
       id: randomUUID(),
       title,
       content,
-      status,
+      status: status as ArticleStatus,
       authorId: authorId || null,
       categoryId: categoryId || null,
-      tags,
-      createdAt: now,
-      updatedAt: now,
-    };
+      tags: {
+        connectOrCreate: tags.map((tagName: string) => ({
+          where: { name: tagName },
+          create: { name: tagName },
+        })),
+      },
+    },
+    include: {
+      author: {
+        select: {
+          id: true,
+          login: true,
+          role: true,
+        },
+      },
+      category: true,
+      tags: true,
+    },
+  });
 
-    this.articleRepository.create(newArticle);
-    return newArticle;
-  }
+  return newArticle;
+}
 
 async update(id: string, updateArticleDto: UpdateArticleDto): Promise<Article> {
   const { tags, ...restData } = updateArticleDto;

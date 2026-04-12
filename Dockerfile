@@ -1,41 +1,36 @@
 # ========== BUILD ==========
 FROM node:24-alpine AS builder
 WORKDIR /app
+
+ARG DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy?schema=public"
+ENV DATABASE_URL=$DATABASE_URL
+
 COPY package*.json ./
+COPY prisma ./prisma/
 RUN npm ci
 COPY . .
 RUN npx prisma generate
 RUN npm run build
+RUN npm prune --production
 
 # ========== PRODUCTION ==========
-FROM node:24-alpine
+FROM node:24-alpine AS runner
 WORKDIR /app
-RUN apk add --no-cache curl
+RUN apk add --no-cache curl openssl
 
 ENV NODE_ENV=production
 
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
+COPY --chown=node:node --from=builder /app/package*.json ./
+COPY --chown=node:node --from=builder /app/dist ./dist
+COPY --chown=node:node --from=builder /app/node_modules ./node_modules
+COPY --chown=node:node --from=builder /app/prisma ./prisma
+COPY --chown=node:node --from=builder /app/prisma.config.ts ./
 
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/package*.json ./
-
-RUN npm install ts-node @types/node --omit=dev
 
 COPY --from=builder /app/prisma/migrations ./prisma/migrations
 
-COPY --from=builder /app/prisma/seed.ts ./prisma/ 2>/dev/null || true
-
-RUN npx prisma generate
-
-RUN chown -R nodejs:nodejs /app
-
-USER nodejs
+USER node
 
 EXPOSE 4000
 
-CMD npx prisma migrate deploy && \
-    npx prisma db seed && \
-    node dist/main
+CMD npx prisma migrate deploy && node dist/src/main

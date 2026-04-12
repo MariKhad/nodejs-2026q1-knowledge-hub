@@ -33,7 +33,7 @@ services:
       dockerfile: Dockerfile
     image: bzzzuka/knowledge-hub-api:latest  
     container_name: knowledge-hub-api
-    restart: on-failure
+    restart: unless-stopped
     ports:
       - "4000:4000"
     environment:
@@ -53,9 +53,9 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
       interval: 30s
-      timeout: 10s
+      timeout: 5s
       retries: 3
-      start_period: 40s
+      start_period: 20s
   adminer:
     image: adminer:latest
     container_name: knowledge-hub-adminer
