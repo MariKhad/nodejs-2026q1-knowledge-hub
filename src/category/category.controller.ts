@@ -13,8 +13,8 @@ export class CategoryController {
   @Get()
   @ApiOperation({ summary: 'Get all categories' })
   @ApiResponse({ status: 200, description: 'Returns all categories' })
-  findAll() {
-    return this.categoryService.findAll();
+  async findAll() {
+    return await this.categoryService.findAll();
   }
 
   @Get(':id')
@@ -23,8 +23,8 @@ export class CategoryController {
   @ApiResponse({ status: 200, description: 'Returns category' })
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
   @ApiResponse({ status: 404, description: 'Category not found' })
-  findOne(@Param('id', UuidValidationPipe) id: string) {
-    return this.categoryService.findById(id);
+  async findOne(@Param('id', UuidValidationPipe) id: string) {
+    return await this.categoryService.findById(id);
   }
 
   @Post()
@@ -33,8 +33,8 @@ export class CategoryController {
   @ApiResponse({ status: 201, description: 'Category created successfully' })
   @ApiResponse({ status: 400, description: 'Invalid input or category name already exists' })
   @ApiBody({ type: CreateCategoryDto })
-  create(@Body() createCategoryDto: CreateCategoryDto) {
-    return this.categoryService.create(createCategoryDto);
+  async create(@Body() createCategoryDto: CreateCategoryDto) {
+    return await this.categoryService.create(createCategoryDto);
   }
 
   @Put(':id')
@@ -44,11 +44,11 @@ export class CategoryController {
   @ApiResponse({ status: 400, description: 'Invalid UUID or input' })
   @ApiResponse({ status: 404, description: 'Category not found' })
   @ApiBody({ type: UpdateCategoryDto })
-  update(
+  async update(
     @Param('id', UuidValidationPipe) id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
   ) {
-    return this.categoryService.update(id, updateCategoryDto);
+    return await this.categoryService.update(id, updateCategoryDto);
   }
 
   @Delete(':id')

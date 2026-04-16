@@ -13,8 +13,8 @@ export class UserController {
   @Get()
   @ApiOperation({ summary: 'Get all users' })
   @ApiResponse({ status: 200, description: 'Returns all users' })
-  findAll() {
-    return this.userService.findAll();
+  async findAll() {
+    return await this.userService.findAll();
   }
 
   @Get(':id')
@@ -23,8 +23,8 @@ export class UserController {
   @ApiResponse({ status: 200, description: 'Returns user' })
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
   @ApiResponse({ status: 404, description: 'User not found' })
-  findOne(@Param('id', UuidValidationPipe) id: string) {
-    return this.userService.findById(id);
+  async findOne(@Param('id', UuidValidationPipe) id: string) {
+    return await this.userService.findById(id);
   }
 
   @Post()
@@ -34,7 +34,7 @@ export class UserController {
   @ApiResponse({ status: 400, description: 'Invalid input or login already exists' })
   @ApiBody({ type: CreateUserDto })
   async create(@Body() createUserDto: CreateUserDto) {
-    return this.userService.create(createUserDto);
+    return await this.userService.create(createUserDto);
   }
 
   @Put(':id')
@@ -49,7 +49,7 @@ export class UserController {
     @Param('id', UuidValidationPipe) id: string,
     @Body() updatePasswordDto: UpdatePasswordDto,
   ) {
-    return this.userService.updatePassword(id, updatePasswordDto);
+    return await this.userService.updatePassword(id, updatePasswordDto);
   }
 
   @Delete(':id')
@@ -59,7 +59,7 @@ export class UserController {
   @ApiResponse({ status: 204, description: 'User deleted successfully' })
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
   @ApiResponse({ status: 404, description: 'User not found' })
-  remove(@Param('id', UuidValidationPipe) id: string) {
-    this.userService.delete(id);
+  async remove(@Param('id', UuidValidationPipe) id: string) {
+    await this.userService.delete(id);
   }
 }

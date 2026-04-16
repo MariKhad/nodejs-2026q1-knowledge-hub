@@ -22,7 +22,7 @@ export class ArticleController {
     @Query('categoryId') categoryId?: string,
     @Query('tag') tag?: string,
   ) {
-    return this.articleService.findAll(status, categoryId, tag);
+    return await this.articleService.findAll(status, categoryId, tag);
   }
 
   @Get(':id')
@@ -32,7 +32,7 @@ export class ArticleController {
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
   @ApiResponse({ status: 404, description: 'Article not found' })
   async findOne(@Param('id', UuidValidationPipe) id: string) {
-    await this.articleService.findById(id);
+    return await this.articleService.findById(id);
   }
 
   @Post()
@@ -66,7 +66,7 @@ export class ArticleController {
   @ApiResponse({ status: 204, description: 'Article deleted successfully' })
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
   @ApiResponse({ status: 404, description: 'Article not found' })
-  remove(@Param('id', UuidValidationPipe) id: string) {
-    this.articleService.delete(id);
+  async remove(@Param('id', UuidValidationPipe) id: string) {
+    return this.articleService.delete(id);
   }
 }
