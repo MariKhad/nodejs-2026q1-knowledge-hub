@@ -1,34 +1,19 @@
-FROM node:24-alpine AS build
-
-WORKDIR /app
-
-ARG DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy?schema=public"
-ENV DATABASE_URL=$DATABASE_URL
-
-COPY package*.json ./
-RUN npm ci
-
-COPY . .
+FROM node:24.12-alpine AS build
+WORKDIR /home/node/app
+COPY --chown=node:node package.json package-lock.json ./
+RUN npm ci && npm cache clean --force
+COPY --chown=node:node . .
 RUN npx prisma generate
 RUN npm run build
 
-COPY --chown=node:node src/generated ./dist/src/generated
-
-
-FROM node:24-alpine AS production
-
-WORKDIR /app
-
+FROM node:24.12-alpine as production
+WORKDIR /home/node/app
+COPY --chown=node:node package.json package-lock.json ./
+RUN npm ci --omit=dev && npm cache clean --force
+COPY --chown=node:node prisma ./prisma
+COPY --chown=node:node --from=build /home/node/app/dist ./dist
+RUN npx prisma generate && cp -rv src/generated dist/src/
 ENV NODE_ENV=production
-
-COPY package*.json ./
-RUN npm ci --omit=dev
-
-COPY --chown=node:node --from=build /app/dist ./dist
-COPY --chown=node:node --from=build /app/doc ./doc
-
-USER node
-
 EXPOSE 4000
-
-CMD ["node", "dist/src/main.js"]
+USER node
+CMD ["npm", "run", "start:prod"]
