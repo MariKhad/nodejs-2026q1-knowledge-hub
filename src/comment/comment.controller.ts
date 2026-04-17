@@ -1,5 +1,22 @@
-import { Controller, Get, Post, Delete, Body, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Body,
+  Param,
+  Query,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiQuery,
+  ApiParam,
+  ApiBody,
+} from '@nestjs/swagger';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/CreateCommentDto';
 import { ParseUUIDPipe } from '@nestjs/common';
@@ -13,9 +30,12 @@ export class CommentController {
   @ApiOperation({ summary: 'Get all comments for an article' })
   @ApiQuery({ name: 'articleId', required: true, description: 'Article UUID' })
   @ApiResponse({ status: 200, description: 'Returns comments for the article' })
-  @ApiResponse({ status: 400, description: 'articleId query parameter is required' })
-  findByArticleId(@Query('articleId', ParseUUIDPipe) articleId: string) {
-    return this.commentService.findByArticleId(articleId);
+  @ApiResponse({
+    status: 400,
+    description: 'articleId query parameter is required',
+  })
+  async findByArticleId(@Query('articleId', ParseUUIDPipe) articleId: string) {
+    return await this.commentService.findByArticleId(articleId);
   }
 
   @Get(':id')
@@ -24,8 +44,8 @@ export class CommentController {
   @ApiResponse({ status: 200, description: 'Returns comment' })
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
   @ApiResponse({ status: 404, description: 'Comment not found' })
-  findOne(@Param('id', UuidValidationPipe) id: string) {
-    return this.commentService.findById(id);
+  async findOne(@Param('id', UuidValidationPipe) id: string) {
+    return await this.commentService.findById(id);
   }
 
   @Post()
@@ -35,8 +55,8 @@ export class CommentController {
   @ApiResponse({ status: 400, description: 'Invalid input' })
   @ApiResponse({ status: 422, description: 'Article does not exist' })
   @ApiBody({ type: CreateCommentDto })
-  create(@Body() createCommentDto: CreateCommentDto) {
-    return this.commentService.create(createCommentDto);
+  async create(@Body() createCommentDto: CreateCommentDto) {
+    return await this.commentService.create(createCommentDto);
   }
 
   @Delete(':id')
@@ -46,7 +66,7 @@ export class CommentController {
   @ApiResponse({ status: 204, description: 'Comment deleted successfully' })
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
   @ApiResponse({ status: 404, description: 'Comment not found' })
-  remove(@Param('id', UuidValidationPipe) id: string) {
-    this.commentService.delete(id);
+  async remove(@Param('id', UuidValidationPipe) id: string) {
+    await this.commentService.delete(id);
   }
 }

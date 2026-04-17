@@ -1,124 +1,239 @@
-import { Injectable, NotFoundException, BadRequestException, Inject, forwardRef } from '@nestjs/common';
-import { ArticleRepository } from '../database/repositories/article.repository';
-import { IArticle } from './interfaces/IArticle';
-import { EArticleStatus } from './enums/EArticleStatus';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { CreateArticleDto } from './dto/CreateArticleDto';
 import { UpdateArticleDto } from './dto/UpdateArticleDto';
-import { CommentService } from '../comment/comment.service';
-import { CategoryService } from '../category/category.service';
-import { UserService } from '../user/user.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { Article, ArticleStatus } from '../../src/generated/prisma';
 
 @Injectable()
 export class ArticleService {
-  constructor(
-    private articleRepository: ArticleRepository,
-    @Inject(forwardRef(() => UserService))
-    private userService: UserService,
-    @Inject(forwardRef(() => CategoryService))
-    private categoryService: CategoryService,
-    @Inject(forwardRef(() => CommentService))
-    private commentService: CommentService,
-  ) {}
+  constructor(private prismaService: PrismaService) {}
 
-  findAll(status?: EArticleStatus, categoryId?: string, tag?: string): IArticle[] {
-    return this.articleRepository.findByFilters({ status, categoryId, tag });
+  async findAll(
+    status?: ArticleStatus,
+    categoryId?: string,
+    tag?: string,
+  ): Promise<Article[]> {
+    const where: any = {};
+
+    if (status) {
+      where.status = status;
+    }
+
+    if (categoryId) {
+      where.categoryId = categoryId;
+    }
+
+    if (tag) {
+      where.tags = {
+        some: {
+          name: tag,
+        },
+      };
+    }
+
+    return this.prismaService.article.findMany({
+      where,
+      include: {
+        author: true,
+        category: true,
+        tags: true,
+        comments: true,
+      },
+    });
   }
 
-  findById(id: string): IArticle {
-    const article = this.articleRepository.findById(id);
+  async findById(id: string): Promise<Article> {
+    const article = await this.prismaService.article.findUnique({
+      where: { id },
+      include: {
+        author: {
+          select: {
+            id: true,
+            login: true,
+            role: true,
+          },
+        },
+        category: true,
+        tags: true,
+        comments: {
+          include: {
+            author: {
+              select: {
+                id: true,
+                login: true,
+                role: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'asc',
+          },
+        },
+      },
+    });
+
     if (!article) {
       throw new NotFoundException(`Article with id ${id} not found`);
     }
+
     return article;
   }
 
-  async create(createArticleDto: CreateArticleDto): Promise<IArticle> {
-    const { title, content, status = EArticleStatus.DRAFT, authorId, categoryId, tags = [] } = createArticleDto;
-
+  async create(createArticleDto: CreateArticleDto): Promise<Article> {
+    const {
+      title,
+      content,
+      status = ArticleStatus.DRAFT,
+      authorId,
+      categoryId,
+      tags = [],
+    } = createArticleDto;
     if (authorId) {
-      const author = this.userService.findById(authorId);
+      const author = await this.prismaService.user.findUnique({
+        where: { id: authorId },
+      });
       if (!author) {
         throw new BadRequestException(`User with id ${authorId} not found`);
       }
     }
 
     if (categoryId) {
-      const category = this.categoryService.findById(categoryId);
+      const category = await this.prismaService.category.findUnique({
+        where: { id: categoryId },
+      });
       if (!category) {
-        throw new BadRequestException(`Category with id ${categoryId} not found`);
+        throw new BadRequestException(
+          `Category with id ${categoryId} not found`,
+        );
       }
     }
 
-    const now = Date.now();
-    const newArticle: IArticle = {
-      id: randomUUID(),
-      title,
-      content,
-      status,
-      authorId: authorId || null,
-      categoryId: categoryId || null,
-      tags,
-      createdAt: now,
-      updatedAt: now,
-    };
+    const newArticle = await this.prismaService.article.create({
+      data: {
+        id: randomUUID(),
+        title,
+        content,
+        status: status as ArticleStatus,
+        authorId: authorId || null,
+        categoryId: categoryId || null,
+        tags: {
+          connectOrCreate: tags.map((tagName: string) => ({
+            where: { name: tagName },
+            create: { name: tagName },
+          })),
+        },
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            login: true,
+            role: true,
+          },
+        },
+        category: true,
+        tags: true,
+      },
+    });
 
-    this.articleRepository.create(newArticle);
     return newArticle;
   }
 
-  async update(id: string, updateArticleDto: UpdateArticleDto): Promise<IArticle> {
-    const article = this.articleRepository.findById(id);
-    if (!article) {
-      throw new NotFoundException(`Article with id ${id} not found`);
-    }
+  async update(
+    id: string,
+    updateArticleDto: UpdateArticleDto,
+  ): Promise<Article> {
+    const { tags, ...restData } = updateArticleDto;
 
-    if (updateArticleDto.authorId) {
-      const author = this.userService.findById(updateArticleDto.authorId);
-      if (!author) {
-        throw new BadRequestException(`User with id ${updateArticleDto.authorId} not found`);
+    return this.prismaService.$transaction(async (tx) => {
+      const existingArticle = await tx.article.findUnique({
+        where: { id },
+      });
+
+      if (!existingArticle) {
+        throw new NotFoundException(`Article with id ${id} not found`);
       }
-    }
 
-    if (updateArticleDto.categoryId) {
-      const category = this.categoryService.findById(updateArticleDto.categoryId);
-      if (!category) {
-        throw new BadRequestException(`Category with id ${updateArticleDto.categoryId} not found`);
+      if (restData.authorId) {
+        const author = await tx.user.findUnique({
+          where: { id: restData.authorId },
+        });
+        if (!author) {
+          throw new BadRequestException(
+            `User with id ${restData.authorId} not found`,
+          );
+        }
       }
-    }
 
-    const updatedArticle = {
-      ...article,
-      ...updateArticleDto,
-      updatedAt: Date.now(),
-    };
+      if (restData.categoryId) {
+        const category = await tx.category.findUnique({
+          where: { id: restData.categoryId },
+        });
+        if (!category) {
+          throw new BadRequestException(
+            `Category with id ${restData.categoryId} not found`,
+          );
+        }
+      }
 
-    this.articleRepository.update(id, updatedArticle);
-    return updatedArticle;
+      await tx.article.update({
+        where: { id },
+        data: {
+          title: restData.title,
+          content: restData.content,
+          status: restData.status,
+          authorId: restData.authorId,
+          categoryId: restData.categoryId,
+          updatedAt: new Date(),
+        },
+      });
+
+      if (tags) {
+        await tx.article.update({
+          where: { id },
+          data: {
+            tags: {
+              set: [],
+              connectOrCreate: tags.map((tagName: string) => ({
+                where: { name: tagName },
+                create: { name: tagName },
+              })),
+            },
+          },
+        });
+      }
+
+      return tx.article.findUnique({
+        where: { id },
+        include: {
+          author: {
+            select: { id: true, login: true, role: true },
+          },
+          category: true,
+          tags: true,
+        },
+      }) as Promise<Article>;
+    });
   }
 
-  delete(id: string): void {
-    const article = this.articleRepository.findById(id);
-    if (!article) {
-      throw new NotFoundException(`Article with id ${id} not found`);
-    }
-    
-    this.commentService.deleteByArticleId(id);
-    const deleted = this.articleRepository.delete(id);
+  async delete(id: string): Promise<void> {
+    await this.prismaService.$transaction(async (tx) => {
+      const article = await tx.article.findUnique({
+        where: { id },
+      });
 
+      if (!article) {
+        throw new NotFoundException(`Article with id ${id} not found`);
+      }
 
-    if (!deleted) {
-      throw new NotFoundException(`Article with id ${id} not found`);
-    }
+      await tx.article.delete({
+        where: { id },
+      });
+    });
   }
-
-  nullifyAuthorId(authorId: string): void {
-    this.articleRepository.nullifyAuthorId(authorId);
-  }
-
-  nullifyCategoryId(categoryId: string): number {
-    const result = this.articleRepository.nullifyCategoryId(categoryId);
-    return result;
-  }
-  
 }

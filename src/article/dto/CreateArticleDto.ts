@@ -1,6 +1,13 @@
-import { IsString, IsOptional, IsEnum, IsArray, IsUUID, MinLength } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsArray,
+  IsUUID,
+  MinLength,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { EArticleStatus } from '../enums/EArticleStatus';
+import { ArticleStatus } from '../../../src/generated/prisma';
 
 export class CreateArticleDto {
   @ApiProperty({
@@ -13,7 +20,8 @@ export class CreateArticleDto {
   title: string;
 
   @ApiProperty({
-    example: 'NestJS modules are the building blocks of a NestJS application...',
+    example:
+      'NestJS modules are the building blocks of a NestJS application...',
     description: 'Content of the article',
     minLength: 1,
   })
@@ -22,14 +30,14 @@ export class CreateArticleDto {
   content: string;
 
   @ApiPropertyOptional({
-    enum: EArticleStatus,
-    example: EArticleStatus.DRAFT,
+    enum: ArticleStatus,
+    example: ArticleStatus.DRAFT,
     description: 'Status of the article (default: draft)',
-    default: EArticleStatus.DRAFT,
+    default: ArticleStatus.DRAFT,
   })
   @IsOptional()
-  @IsEnum(EArticleStatus)
-  status?: EArticleStatus = EArticleStatus.DRAFT;
+  @IsEnum(ArticleStatus)
+  status?: ArticleStatus = ArticleStatus.DRAFT;
 
   @ApiPropertyOptional({
     example: '123e4567-e89b-12d3-a456-426614174000',

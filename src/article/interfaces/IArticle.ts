@@ -7,5 +7,5 @@ export class IArticle {
   categoryId: string | null;
   tags: string[];
   createdAt: number;
-  updatedAt: number; 
+  updatedAt: number;
 }

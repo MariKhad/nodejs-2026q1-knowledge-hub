@@ -33,7 +33,9 @@ services:
       dockerfile: Dockerfile
     image: bzzzuka/knowledge-hub-api:latest  
     container_name: knowledge-hub-api
-    restart: on-failure
+    restart: unless-stopped
+    env_file:
+    - .env
     ports:
       - "4000:4000"
     environment:
@@ -44,6 +46,7 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
+      - DATABASE_URL=postgresql://knowledge_user:simple123@db:5432/knowledge_hub?schema=public&pool_timeout=30&connection_limit=10
     depends_on:
       db:
         condition: service_healthy
@@ -52,16 +55,22 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
       interval: 30s
-      timeout: 10s
+      timeout: 5s
       retries: 3
-      start_period: 40s
+      start_period: 20s
   adminer:
     image: adminer:latest
     container_name: knowledge-hub-adminer
     restart: unless-stopped
     ports:
       - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: db                           
+      ADMINER_DEFAULT_DB: ${POSTGRES_DB}                   
+      ADMINER_DEFAULT_USER: ${POSTGRES_USER}
+      ADMINER_DEFAULT_PASSWORD: ${POSTGRES_PASSWORD}     
     networks:
       - knowledge-network
-    profiles:
-      - debug     
+    depends_on:
+      db:
+        condition: service_healthy  
