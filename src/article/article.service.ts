@@ -7,11 +7,52 @@ import { randomUUID } from 'crypto';
 import { CreateArticleDto } from './dto/CreateArticleDto';
 import { UpdateArticleDto } from './dto/UpdateArticleDto';
 import { PrismaService } from '../prisma/prisma.service';
-import { Article, ArticleStatus } from '../../src/generated/prisma';
+import { Article, ArticleStatus, Prisma } from '../../src/generated/prisma';
+
+export type ArticleWithRelations = Prisma.ArticleGetPayload<{
+	include: { tags: true; author: true; category: true };
+}>;
+
+
 
 @Injectable()
 export class ArticleService {
   constructor(private prismaService: PrismaService) {}
+
+  private mapArticle = (raw: ArticleWithRelations) => ({
+	id: raw.id,
+	title: raw.title,
+	content: raw.content,
+	status: raw.status.toLowerCase() as Article['status'],
+	authorId: raw.authorId,
+	categoryId: raw.categoryId,
+	tags: raw.tags.map((tag) => tag.name),
+	createdAt: raw.createdAt.getTime(),
+	updatedAt: raw.updatedAt.getTime(),
+});
+
+ private toDbStatus(status: ArticleStatus): 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' {
+    if (status === ArticleStatus.PUBLISHED) {
+      return 'PUBLISHED';
+    }
+
+    if (status === ArticleStatus.ARCHIVED) {
+      return 'ARCHIVED';
+    }
+
+    return 'DRAFT';
+  }
+
+  private buildTagConnectOrCreate(tags?: string[]) {
+    if (!tags) {
+      return undefined;
+    }
+
+    return tags.map((tag) => ({
+      where: { name: tag },
+      create: { name: tag },
+    }));
+  }
 
   async findAll(
     status?: ArticleStatus,
@@ -84,7 +125,7 @@ export class ArticleService {
     return article;
   }
 
-  async create(createArticleDto: CreateArticleDto): Promise<Article> {
+  async create(createArticleDto: CreateArticleDto) {
     const {
       title,
       content,
@@ -93,23 +134,23 @@ export class ArticleService {
       categoryId,
       tags = [],
     } = createArticleDto;
+    let finalAuthorId = authorId;
     if (authorId) {
       const author = await this.prismaService.user.findUnique({
         where: { id: authorId },
       });
       if (!author) {
-        throw new BadRequestException(`User with id ${authorId} not found`);
+        finalAuthorId = null;
       }
     }
 
+    let finalCategoryId = categoryId;
     if (categoryId) {
       const category = await this.prismaService.category.findUnique({
         where: { id: categoryId },
       });
       if (!category) {
-        throw new BadRequestException(
-          `Category with id ${categoryId} not found`,
-        );
+        finalCategoryId = null;
       }
     }
 
@@ -119,8 +160,8 @@ export class ArticleService {
         title,
         content,
         status: status as ArticleStatus,
-        authorId: authorId || null,
-        categoryId: categoryId || null,
+        authorId: finalAuthorId || null,
+        categoryId: finalCategoryId || null,
         tags: {
           connectOrCreate: tags.map((tagName: string) => ({
             where: { name: tagName },
@@ -129,19 +170,13 @@ export class ArticleService {
         },
       },
       include: {
-        author: {
-          select: {
-            id: true,
-            login: true,
-            role: true,
-          },
-        },
+        author: true,
         category: true,
         tags: true,
       },
     });
 
-    return newArticle;
+    return this.mapArticle(newArticle);
   }
 
   async update(
