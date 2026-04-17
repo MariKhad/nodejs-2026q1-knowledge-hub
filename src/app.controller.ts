@@ -10,6 +10,6 @@ export class AppController {
   @ApiOperation({ summary: 'Health check' })
   @ApiResponse({ status: 200, description: 'API is running' })
   getHealth(): { status: string; timestamp: number } {
-    return this.appService.getHealth()
+    return this.appService.getHealth();
   }
 }

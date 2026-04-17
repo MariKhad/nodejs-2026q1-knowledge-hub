@@ -1,4 +1,11 @@
-import { IsString, IsOptional, IsEnum, IsArray, IsUUID, MinLength } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsArray,
+  IsUUID,
+  MinLength,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ArticleStatus } from '../../../src/generated/prisma';
 
@@ -13,7 +20,8 @@ export class CreateArticleDto {
   title: string;
 
   @ApiProperty({
-    example: 'NestJS modules are the building blocks of a NestJS application...',
+    example:
+      'NestJS modules are the building blocks of a NestJS application...',
     description: 'Content of the article',
     minLength: 1,
   })

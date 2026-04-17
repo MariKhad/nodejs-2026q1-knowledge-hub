@@ -1,5 +1,22 @@
-import { Controller, Get, Post, Delete, Body, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Body,
+  Param,
+  Query,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiQuery,
+  ApiParam,
+  ApiBody,
+} from '@nestjs/swagger';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/CreateCommentDto';
 import { ParseUUIDPipe } from '@nestjs/common';
@@ -13,7 +30,10 @@ export class CommentController {
   @ApiOperation({ summary: 'Get all comments for an article' })
   @ApiQuery({ name: 'articleId', required: true, description: 'Article UUID' })
   @ApiResponse({ status: 200, description: 'Returns comments for the article' })
-  @ApiResponse({ status: 400, description: 'articleId query parameter is required' })
+  @ApiResponse({
+    status: 400,
+    description: 'articleId query parameter is required',
+  })
   async findByArticleId(@Query('articleId', ParseUUIDPipe) articleId: string) {
     return await this.commentService.findByArticleId(articleId);
   }

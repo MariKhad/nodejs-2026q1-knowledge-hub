@@ -171,7 +171,7 @@ describe('Article (e2e)', () => {
       const response = await unauthorizedRequest
         .get(`${articlesRoutes.getAll}?categoryId=${categoryId}`)
         .set(commonHeaders);
-    
+
       expect(response.status).toBe(StatusCodes.OK);
       expect(response.body).toBeInstanceOf(Array);
 

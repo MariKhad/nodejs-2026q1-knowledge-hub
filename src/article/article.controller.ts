@@ -1,5 +1,23 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  Query,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiQuery,
+  ApiBody,
+} from '@nestjs/swagger';
 import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/CreateArticleDto';
 import { UpdateArticleDto } from './dto/UpdateArticleDto';
@@ -39,7 +57,10 @@ export class ArticleController {
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a new article' })
   @ApiResponse({ status: 201, description: 'Article created successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid input or author/category not found' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input or author/category not found',
+  })
   @ApiBody({ type: CreateArticleDto })
   async create(@Body() createArticleDto: CreateArticleDto) {
     return await this.articleService.create(createArticleDto);
