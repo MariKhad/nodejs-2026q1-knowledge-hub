@@ -9,6 +9,7 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -17,14 +18,18 @@ import {
   ApiParam,
   ApiQuery,
   ApiBody,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/CreateArticleDto';
 import { UpdateArticleDto } from './dto/UpdateArticleDto';
 import { UuidValidationPipe } from '../common/pipes/uuid.pipe';
 import { ArticleStatus } from '../../src/generated/prisma';
+import { JwtAuthGuard } from 'src/auth/guards/auth.guard';
 
 @ApiTags('Articles')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('article')
 export class ArticleController {
   constructor(private readonly articleService: ArticleService) {}

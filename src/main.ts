@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import 'dotenv/config'; 
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -9,7 +10,7 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
-      transform: true,
+      transform: true,           
       forbidNonWhitelisted: false,
     }),
   );
@@ -18,6 +19,7 @@ async function bootstrap() {
     .setTitle('Knowledge Hub API')
     .setDescription('REST API for Knowledge Hub platform')
     .setVersion('1.0')
+    .addBearerAuth()
     .addTag('Users', 'User management endpoints')
     .addTag('Articles', 'Article management endpoints')
     .addTag('Categories', 'Category management endpoints')
